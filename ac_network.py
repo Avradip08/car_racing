@@ -1,7 +1,6 @@
 import numpy as np
 import tensorflow as tf
 from config import ACNetworkConfig, WorldConfig, A3CConfig
-import threading
 
 
 class ActorCriticNetwork(object):
@@ -79,6 +78,7 @@ class ActorCriticNetwork(object):
     #TODO: feed_dict?
     def apply_gradients(self, sess, grads, feed_dict):
         # TODO : give global step
+        print self.get_vars()
         self.apply_grads = self.optimizer.apply_gradients(self.get_vars(), grads)
         sess.run(self.apply_grads, feed_dict)
 
@@ -100,7 +100,8 @@ class ActorCriticNetwork(object):
         sess.run(self.copy_params, feed_dict={})
 
     def get_vars(self):
-        return tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=self._scope)
+        #return tf.trainable_variables()
+        return tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES)
 
     def optimize(self, sess, lr):
         sess.run()

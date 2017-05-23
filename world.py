@@ -86,12 +86,14 @@ class World(object):
         """
         action = np.multiply(self.actions[action_num], certainty)
 
+        print ("xx")
         # Take step in the world
         self._env_state, r, self.terminal, _ = self.env.step(action)
+        print("yy")
 
         # Update frame stack
         self._frame_stack.pop(0)
-        self._frame_stack.append(self._env_state)
+        self._frame_stack.append(self._process_frame(self._env_state))
 
         # Update cumulative reward R
         self.rewards += r

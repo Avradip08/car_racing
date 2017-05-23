@@ -1,6 +1,6 @@
 import tensorflow as tf
 import numpy as np
-from world import World
+#from world import World
 from ac_network import ActorCriticNetwork as ACN
 from config import ACWorkerConfig
 
@@ -10,7 +10,7 @@ class ACWorker(object):
     """
     def __init__(self, worker_num, shared_network, device):
         # Create world and reset all states
-        self.world = World("CarRacing-v0", render=False)
+        #self.world = World("CarRacing-v0", render=False)
 
         self.network = ACN("worker"+str(worker_num), device=device)
         self.shared_network = shared_network
@@ -38,11 +38,16 @@ class ACWorker(object):
         # Sync this network with the shared network
         self.network.copy_params_from_shared_network(sess)
 
+        print "Thread {} coppied parameters from the shared network".format(self.worker_num)
+
         for t in range(T):
             policy, v = self.network.get_policy_and_value(sess, self.world.get_state())
             action = self.choose_action(policy)
 
+            print "Thread {} taking action {} with certainty {}".format(self.worker_num, str(action), str(np.amax(policy)))
             self.world.step(action, certainty = 1.0)
+
+            print "Made transition"
 
             curr_transition = self.world.get_last_transition()
             curr_transition.append(v)
@@ -65,11 +70,11 @@ class ACWorker(object):
         for s, a, r, sp, v in transitions:
             R = r + ACWorkerConfig.GAMMA * R
             td = R - v
-            one_hot_a = np.zeros(WorldConfig.NUM_ACTIONS)
-            one_hot_a[a] = 1
+            #one_hot_a = np.zeros(WorldConfig.NUM_ACTIONS)
+            #one_hot_a[a] = 1
 
             batch_s.append(s)
-            batch_a.append(one_hot_a)
+            batch_a.append(a)
             batch_r.append(R)
             batch_td.append(td)
 
