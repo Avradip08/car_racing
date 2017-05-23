@@ -27,3 +27,7 @@ class ACNetworkConfig():
     LR = 0.001
 
     FEATURE_DIM = 256
+
+class ACWorkerConfig():
+    T = 5
+    GAMMA = 0.99

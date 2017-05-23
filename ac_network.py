@@ -96,18 +96,18 @@ class ActorCriticNetwork(object):
     def copy_params_from_shared_network(self, sess):
         sess.run(self.copy_params, feed_dict={})
 
-    def apply_gradients(self, sess, lr, grads):
-        feed_dict = {
-            self.lr : lr,
-            self.grads : grads
-        }
-        sess.run(self.optimize, feed_dict=feed_dict)
-
     def get_vars(self):
         return tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=self._scope)
 
     def optimize(self, sess, lr):
         sess.run()
+
+    def get_policy_and_value(self, sess, state):
+        feed_dict = {
+            self.s : [state]
+        }
+        p, v = sess.run([self.policy, self.v], feed_dict=feed_dict)
+        return p[0], v[0] 
 
     def get_policy(self, sess, state):
         feed_dict = {

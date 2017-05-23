@@ -95,11 +95,16 @@ class World(object):
 
         # Update cumulative reward R
         self.rewards += r
+        self.last_reward = r
+        self.last_action = action
 
         # If we moved forward, increment num_tiles
         if r >= 0.0: self.num_tiles += 1
 
         if self.render: self.env.render()
+
+    def get_last_transition(self):
+        return [self.get_prev_state(), self.last_action, self.last_reward, self.get_state()]
 
     def print_stats(self):
         print "Rewards:"+str(self.rewards)+"| Num Tiles: "+str(self.num_tiles)
