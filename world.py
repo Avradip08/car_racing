@@ -23,7 +23,7 @@ def zero_center(frame):
 class World(object):
     """
     World class that represents a single instance of the openAi env.
-    This class handles all operations regarding the interaction / 
+    This class handles all operations regarding the interaction /
     background processing of the game environment.
     """
 
@@ -54,7 +54,7 @@ class World(object):
         """
         returns a 3-d (after last action)state array of size (84, 84, 5)
         """
-        return np.stack(self_frame_stack[1:], axis=2)
+        return np.stack(self._frame_stack[1:], axis=2)
 
     def get_prev_state(self):
         """

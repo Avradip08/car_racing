@@ -1,6 +1,8 @@
 import numpy as np
 import tensorflow as tf
-from config import ACNetworkConfig, WorldConfig
+from config import ACNetworkConfig, WorldConfig, A3CConfig
+import threading
+
 
 class ActorCriticNetwork(object):
     """
@@ -74,10 +76,11 @@ class ActorCriticNetwork(object):
                 if self._scope == "shared":
                     self.optimizer = tf.train.AdamOptimizer(ACNetworkConfig.LR)
 
-    def apply_gradients(self, sess, grads):
+    #TODO: feed_dict?
+    def apply_gradients(self, sess, grads, feed_dict):
         # TODO : give global step
-        self.apply_grads = self.optimizer.apply_gradients(zip(self.get_vars(), grads))
-        sess.run(self.apply_grads)
+        self.apply_grads = self.optimizer.apply_gradients(self.get_vars(), grads)
+        sess.run(self.apply_grads, feed_dict)
 
     def set_copy_params_op(self, shared_network):
         my_vars = self.get_vars()
@@ -107,7 +110,7 @@ class ActorCriticNetwork(object):
             self.s : [state]
         }
         p, v = sess.run([self.policy, self.v], feed_dict=feed_dict)
-        return p[0], v[0] 
+        return p[0], v[0]
 
     def get_policy(self, sess, state):
         feed_dict = {
@@ -124,11 +127,10 @@ class ActorCriticNetwork(object):
 
 if __name__ == "__main__":
     n1 = ActorCriticNetwork("shared")
-    n2 = ActorCriticNetwork("scope2")
-    print [var.name for var in n1.get_vars()]
-    print [var.name for var in n2.get_vars()]
-    n2.set_copy_params_op(n1)
+    #n2 = ActorCriticNetwork("scope2")
+    #print [var.name for var in n1.get_vars()]
+    #print [var.name for var in n2.get_vars()]
+    #n2.set_copy_params_op(n1)
     sess = tf.Session()
     sess.run(tf.global_variables_initializer())
-    n2.copy_params_from_shared_network(sess)
-
+    #n2.copy_params_from_shared_network(sess)

@@ -26,7 +26,8 @@ class ACWorker(object):
         """
         return np.random.choice(range(len(policy)), p = policy)
 
-    def run(self, sess, ep, score_input):
+    #TODO: def run(self, sess, ep, score_input): ?
+    def run(self, sess):
         """
         Threading Operation of this worker
         """
@@ -39,7 +40,7 @@ class ACWorker(object):
 
         for t in range(T):
             policy, v = self.network.get_policy_and_value(sess, self.world.get_state())
-            action = choose_action(policy)
+            action = self.choose_action(policy)
 
             self.world.step(action, certainty = 1.0)
 
@@ -53,19 +54,25 @@ class ACWorker(object):
                 break
 
         R = self.network.get_value(sess, self.world.get_state())
-        if t != T - 1: # If early termination
+        if t != T - 1: #TODO: If early termination
             R = 0.0
 
         # Go in reverse order
         transitions.reverse()
 
+        batch_s, batch_a, batch_r, batch_td = [], [], [], []
+
         for s, a, r, sp, v in transitions:
             R = r + ACWorkerConfig.GAMMA * R
             td = R - v
+            one_hot_a = np.zeros(WorldConfig.NUM_ACTIONS)
+            one_hot_a[a] = 1
 
-        self.shared_network.apply_gradients(sess,)
+            batch_s.append(s)
+            batch_a.append(one_hot_a)
+            batch_r.append(R)
+            batch_td.append(td)
 
-
-
-
-
+        feed_dict = {self.network.s: batch_s, self.network.a: batch_a, \
+            self.network.td: batch_td, self.network.r: batch_r}
+        self.shared_network.apply_gradients(sess, self.network.gradients, feed_dict)

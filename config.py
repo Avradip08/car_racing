@@ -1,13 +1,13 @@
 """
-For each module, put its config variables / constants in its own respective 
+For each module, put its config variables / constants in its own respective
 """
 
 class WorldConfig():
     NAME = "CarRacing-v0"
 
-    # POSSIBLE ACTIONS 
+    # POSSIBLE ACTIONS
     GAS = [0.0, 1.0, 0.0]
-    BRAKE = [0.0, 0.0, 0.9]
+    BRAKE = [0.0, 0.0, 0.8]
     LEFT = [-1.0, 0.0, 0.0]
     RIGHT = [1.0, 0.0, 0.0]
 
@@ -17,11 +17,11 @@ class WorldConfig():
 
     # Each state is 3rd dimensional stack of consecutive frames
     NUM_FRAMES_IN_STATE = 5
-    WORLD_SIZE = 84
+    WORLD_SIZE = 84 #TODO: why 84?
 
 
 class A3CConfig():
-    NUM_THREADS = 1
+    NUM_THREADS = 3
 
 class ACNetworkConfig():
     LR = 0.001
@@ -31,3 +31,4 @@ class ACNetworkConfig():
 class ACWorkerConfig():
     T = 5
     GAMMA = 0.99
+    MAX_ITERATIONS = 10
