@@ -1,7 +1,9 @@
 import gym
 import numpy as np
 from config import WorldConfig
+import threading
 
+_LOCK = threading.Lock()
 
 def crop(frame, length=12):
     """
@@ -27,14 +29,15 @@ class World(object):
     background processing of the game environment.
     """
 
-    def __init__(self, world_name, render=False):
+    def __init__(self, world_name, env, render=False):
         """
         Create the specified world and make it blank-slate
         """
-        self.env = gym.make(world_name)
-        self._env_state = self.env.reset()
-        self._frame_stack = [self._process_frame(self._env_state)] * \
-                        (WorldConfig.NUM_FRAMES_IN_STATE + 1)
+        self.env = env
+        #self.env = gym.make(world_name)
+        #self._env_state = self.env.reset()
+        #self._frame_stack = [self._process_frame(self._env_state)] * \
+                        #(WorldConfig.NUM_FRAMES_IN_STATE + 1)
         self.actions = WorldConfig.ACTIONS
         self.terminal = False
         self.num_tiles = 0
@@ -72,24 +75,27 @@ class World(object):
         return self.rewards
 
     def reset(self):
+        _LOCK.acquire()
         self._env_state = self.env.reset()
+        self.env.render()
         self.terminal = False
         self.num_tiles = 0
         self.rewards = 0.0
         self._frame_stack = [self._process_frame(self._env_state)] * \
                         (WorldConfig.NUM_FRAMES_IN_STATE + 1)
+        _LOCK.release()
 
     def step(self, action_num, certainty=1.0):
         """
         action_num : GAS, BRAKE, LEFT, RIGHT in order 0123
         certainty : the softmax score of the chosen action.
         """
+        _LOCK.acquire()
         action = np.multiply(self.actions[action_num], certainty)
 
-        print ("xx")
         # Take step in the world
-        self._env_state, r, self.terminal, _ = self.env.step(action)
-        print("yy")
+        for i in range(30):
+            self._env_state, r, self.terminal, _ = self.env.step(action)
 
         # Update frame stack
         self._frame_stack.pop(0)
@@ -103,7 +109,9 @@ class World(object):
         # If we moved forward, increment num_tiles
         if r >= 0.0: self.num_tiles += 1
 
-        if self.render: self.env.render()
+        #if self.render: self.env.render()
+        #self.env._render()
+        _LOCK.release()
 
     def get_last_transition(self):
         return [self.get_prev_state(), self.last_action, self.last_reward, self.get_state()]
