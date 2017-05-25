@@ -104,7 +104,7 @@ class World(object):
         # Update cumulative reward R
         self.rewards += r
         self.last_reward = r
-        self.last_action = action
+        self.last_action = action_num
 
         # If we moved forward, increment num_tiles
         if r >= 0.0: self.num_tiles += 1

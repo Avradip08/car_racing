@@ -1,8 +1,9 @@
 import tensorflow as tf
 import numpy as np
-#from world import World
 from ac_network import ActorCriticNetwork as ACN
-from config import ACWorkerConfig
+from config import ACWorkerConfig, WorldConfig
+
+import sys
 
 class ACWorker(object):
     """
@@ -16,6 +17,9 @@ class ACWorker(object):
         self.shared_network = shared_network
         self._device = device
         self.worker_num = worker_num
+
+        # Prepare for gradient calc
+        self.network.set_gradients_op()
 
         # Prepare for copying network parameters
         self.network.set_copy_params_op(self.shared_network)
@@ -45,6 +49,8 @@ class ACWorker(object):
             action = self.choose_action(policy)
 
             print "Thread {} taking action {} with certainty {}".format(self.worker_num, str(action), str(np.amax(policy)))
+            sys.stdout.flush()
+
             self.world.step(action, certainty = 1.0)
 
             print "Made transition"
@@ -70,14 +76,29 @@ class ACWorker(object):
         for s, a, r, sp, v in transitions:
             R = r + ACWorkerConfig.GAMMA * R
             td = R - v
-            #one_hot_a = np.zeros(WorldConfig.NUM_ACTIONS)
-            #one_hot_a[a] = 1
+            one_hot_a = np.zeros(WorldConfig.NUM_ACTIONS)
+            one_hot_a[a] = 1
 
             batch_s.append(s)
-            batch_a.append(a)
+            batch_a.append(one_hot_a)
             batch_r.append(R)
             batch_td.append(td)
 
         feed_dict = {self.network.s: batch_s, self.network.a: batch_a, \
             self.network.td: batch_td, self.network.r: batch_r}
-        self.shared_network.apply_gradients(sess, self.network.gradients, feed_dict)
+        loss, grads = self.network.get_gradients_and_loss(sess, feed_dict)
+
+        feed_dict = {}
+        for p in self.shared_network.grads_placeholders:
+            feed_dict[p] = find_grad(p, grads)
+
+        # Multiprocessing : Instead of updating from the thread, shoot resources up
+
+        self.shared_network.apply_gradients(sess, feed_dict)
+
+def find_grad(p, grad_list):
+    for grad in grad_list:
+        if grad.shape == p.shape:
+            return grad
+
+    return None

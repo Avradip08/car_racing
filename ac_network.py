@@ -42,9 +42,9 @@ class ActorCriticNetwork(object):
                 # Build CNN Feature Extraction Graph
                 conv_w_init = self._get_initializer('conv')
                 conv1 = tf.layers.conv2d(self.s, 16, 8, strides=4, activation=tf.nn.relu,\
-                                     kernel_initializer=conv_w_init)
-                conv2 = tf.layers.conv2d(self.s, 32, 3, strides=2, activation=tf.nn.relu,\
-                                     kernel_initializer=conv_w_init)
+                                     kernel_initializer=conv_w_init, name=self._scope+"_conv1")
+                conv2 = tf.layers.conv2d(conv1, 32, 3, strides=2, activation=tf.nn.relu,\
+                                     kernel_initializer=conv_w_init, name=self._scope+"_conv2")
                 conv2_flatten = tf.contrib.layers.flatten(conv2)
 
                 # Build Policy and Value Graph
@@ -57,30 +57,42 @@ class ActorCriticNetwork(object):
                 self.policy = tf.nn.softmax(pi_scores)
                 self.v = tf.reshape(v, [-1])
 
+                # Store all variables
+                self.var_list = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=self._scope)
+
                 # Attach Loss and Optimizers
                 log_policy = tf.log(tf.clip_by_value(self.policy, 1e-20, 1.0))
                 entropy = -tf.reduce_sum(self.policy * log_policy, axis=1)
 
-                p_loss = -tf.reduce_sum(tf.reduce_sum(tf.matmul(log_policy, self.a), axis=1) * self.td + entropy * 0.01)
+                p_loss = -tf.reduce_sum(tf.reduce_sum(tf.multiply(log_policy, self.a), axis=1) * self.td + entropy * 0.01)
                 v_loss = 0.5 * tf.nn.l2_loss(self.r - self.v)
 
                 # Combine policy and value networks for optimization
                 self.loss = p_loss + v_loss
 
                 # Gradient w.r.t to the loss.
-                self.gradients = tf.gradients(self.loss, self.get_vars())
+                #self.gradients = tf.gradients(self.loss, self.get_vars())
 
                 # Only the shared network has an optimizer
                 # TODO : grad clip...
                 if self._scope == "shared":
-                    self.optimizer = tf.train.AdamOptimizer(ACNetworkConfig.LR)
+                    self.grads_placeholders = [tf.placeholder(tf.float32, shape=var.get_shape()) for var in self.get_vars()]
+                    self.optimizer = tf.train.AdamOptimizer(ACNetworkConfig.LR, use_locking=True)
+                    self.apply_grads = self.optimizer.apply_gradients(zip(self.grads_placeholders, self.get_vars()))
 
-    #TODO: feed_dict?
-    def apply_gradients(self, sess, grads, feed_dict):
+    def set_gradients_op(self):
+        """
+        sets the gradients_op
+        """
+        self.gradients = tf.gradients(self.loss, self.get_vars(), name=self._scope+"_gradients")
+
+    def get_gradients_and_loss(self, sess, feed_dict):
+        return sess.run([self.loss, self.gradients], feed_dict=feed_dict)
+
+    def apply_gradients(self, sess, feed_dict):
         # TODO : give global step
-        print self.get_vars()
-        self.apply_grads = self.optimizer.apply_gradients(self.get_vars(), grads)
-        sess.run(self.apply_grads, feed_dict)
+
+        return sess.run(self.apply_grads, feed_dict)
 
     def set_copy_params_op(self, shared_network):
         my_vars = self.get_vars()
@@ -90,18 +102,20 @@ class ActorCriticNetwork(object):
 
         ops = []
         with tf.device(self._device):
-            with tf.name_scope(shared_network._scope, []) as name:
+            with tf.name_scope("Copy_"+self._scope, []) as name:
                 for i in range(len(my_vars)):
-                    ops.append(tf.assign(my_vars[i], shared_vars[i]))
+                    ops.append(tf.assign(my_vars[i], shared_vars[i], use_locking=True))
 
                 self.copy_params = tf.group(*ops, name=name)
 
     def copy_params_from_shared_network(self, sess):
         sess.run(self.copy_params, feed_dict={})
 
+    def set_vars(self, var_list):
+        self.var_list = var_list
+
     def get_vars(self):
-        #return tf.trainable_variables()
-        return tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES)
+        return self.var_list
 
     def optimize(self, sess, lr):
         sess.run()
