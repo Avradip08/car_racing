@@ -61,8 +61,8 @@ class ACWorker(object):
             if self.world.is_terminal():
                 # Record score and stuff here
                 #print "Reward: {} | NumTiles: {}".format(self.world.rewards, self.world.num_tiles)
-                if self.worker_num == 0 :
-                    self.world.print_stats()
+                #if self.worker_num == 0 :
+                self.world.print_stats()
                 self.world.reset()
                 break
 

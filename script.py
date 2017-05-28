@@ -41,7 +41,7 @@ sess = tf.Session(graph=graph)
 
 filewriter = tf.summary.FileWriter("./results", sess.graph)
 
-saver = tf.train.saver(shared_network.all_vars)
+saver = tf.train.Saver(shared_network.all_vars)
 
 sess.run(var_init)
 

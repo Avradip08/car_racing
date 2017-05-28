@@ -72,11 +72,11 @@ class ActorCriticNetwork(object):
                 # Only the shared network has an optimizer
                 if self._scope == "shared":
                     self.global_step = tf.Variable(0, trainable=False)
-                    self.lr = tf.train.exponential_decay(ACNetworkConfig.LR_START, self.global_step, 100000, 0.99, staircase=True)
+                    self.lr = tf.train.exponential_decay(ACNetworkConfig.LR_START, self.global_step, 10000, 0.99, staircase=True)
 
                     self.grads_placeholders = [tf.placeholder(tf.float32, shape=var.get_shape()) for var in self.get_vars()]
                     self.optimizer = tf.train.AdamOptimizer(self.lr, use_locking=True)
-                    self.apply_grads = self.optimizer.apply_gradients(zip(self.grads_placeholders, self.get_vars()))
+                    self.apply_grads = self.optimizer.apply_gradients(zip(self.grads_placeholders, self.get_vars()), global_step=self.global_step)
                     self.all_vars = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=self._scope)
 
 

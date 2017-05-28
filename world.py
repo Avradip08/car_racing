@@ -119,7 +119,7 @@ class World(object):
         return [self.get_prev_state(), self.last_action, self.last_reward, self.get_state()]
 
     def print_stats(self):
-        print "Rewards:"+str(self.rewards)+"| Num Tiles: "+str(self.env.tile_visited_count)+" | Num Moves: "+str(self.num_moves)
+        print "Rewards:"+str(self.rewards)+"| Num Tiles: "+str(self.num_tiles)+" | Num Moves: "+str(self.num_moves)
 
 if __name__ == "__main__":
     """
