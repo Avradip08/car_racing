@@ -20,7 +20,8 @@ def edge_detection(frame):
     return frame
 
 def zero_center(frame):
-    return np.divide(frame - 127, 127.0)
+    #return np.divide(frame - 127, 127.0)
+    return frame - 127
 
 class World(object):
     """
@@ -101,6 +102,8 @@ class World(object):
         # Update frame stack
         self._frame_stack.pop(0)
         self._frame_stack.append(self._process_frame(self._env_state))
+
+        r = np.clip(r, -1.0, 1.0)
 
         # Update cumulative reward R
         self.rewards += r
