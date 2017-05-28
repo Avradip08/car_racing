@@ -77,15 +77,16 @@ class ActorCriticNetwork(object):
                     self.grads_placeholders = [tf.placeholder(tf.float32, shape=var.get_shape()) for var in self.get_vars()]
                     self.optimizer = tf.train.AdamOptimizer(self.lr, use_locking=True)
                     self.apply_grads = self.optimizer.apply_gradients(zip(self.grads_placeholders, self.get_vars()))
+                    self.all_vars = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=self._scope)
 
 
     def add_summaries(self):
         # Add tensorboard stuff only for the shared network
-        with tf.name_scope("summaries"):
+        with tf.name_scope(self._scope):
             tf.summary.scalar('policy_loss', self.p_loss)
             tf.summary.scalar('value_loss', self.v_loss)
             tf.summary.scalar('total_loss', self.loss)
-            tf.summary.scalar('learning_rate', self.lr)
+            #tf.summary.scalar('learning_rate', self.lr)
             self.merged = tf.summary.merge_all()
 
     def set_gradients_op(self):
@@ -93,7 +94,7 @@ class ActorCriticNetwork(object):
         sets the gradients_op
         """
         grads = tf.gradients(self.loss, self.get_vars(), name=self._scope+"_gradients")
-        self.gradients = [tf.clip_by_norm(grad, 40.0) for grad in grads]
+        self.gradients = [tf.clip_by_norm(grad, 10.0, name=self._scope) for grad in grads]
 
         self.global_norm = tf.global_norm(self.gradients)
         # TODO : apply grad clip

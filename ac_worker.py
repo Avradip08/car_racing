@@ -21,6 +21,8 @@ class ACWorker(object):
         # Prepare for gradient calc
         self.network.set_gradients_op()
 
+        #self.network.add_summaries()
+
         # Prepare for copying network parameters
         self.network.set_copy_params_op(self.shared_network)
 
@@ -59,7 +61,8 @@ class ACWorker(object):
             if self.world.is_terminal():
                 # Record score and stuff here
                 #print "Reward: {} | NumTiles: {}".format(self.world.rewards, self.world.num_tiles)
-                self.world.print_stats()
+                if self.worker_num == 0 :
+                    self.world.print_stats()
                 self.world.reset()
                 break
 

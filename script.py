@@ -41,6 +41,8 @@ sess = tf.Session(graph=graph)
 
 filewriter = tf.summary.FileWriter("./results", sess.graph)
 
+saver = tf.train.saver(shared_network.all_vars)
+
 sess.run(var_init)
 
 
@@ -80,14 +82,14 @@ def run_threads(worker_threads, sess, iteration):
 iteration = 0
 while True:
     if iteration >= 5: break
-    print "Iteration Start"
     processing_threads = run_threads(worker_threads, sess, iteration)
 
     # Finish
     for t in processing_threads:
         t.join()
 
-    print "Iteration Over"
+    saver.save(sess, ACNetworkConfig.SAVE_PATH+str(iteration))
+
     avg_reward = evaluate(sess, shared_network)
     print "Average Reward : {}".format(str(avg_reward))
 

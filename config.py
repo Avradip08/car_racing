@@ -24,11 +24,13 @@ class A3CConfig():
     NUM_THREADS = 4
 
 class ACNetworkConfig():
-    LR_START = 0.0001
+    LR_START = 0.001
 
     FEATURE_DIM = 256
+
+    SAVE_PATH = "./checkpoint/"
 
 class ACWorkerConfig():
     T = 5
     GAMMA = 0.99
-    MAX_ITERATIONS = 1000
+    MAX_ITERATIONS = 10000
