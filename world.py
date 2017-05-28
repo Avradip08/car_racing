@@ -97,7 +97,9 @@ class World(object):
 
         # Take step in the world
         self._env_state, r, self.terminal, _ = self.env.step(action)
-        r = np.clip(r, -1.0, 1.0)
+
+        # Clip the reward
+        r = np.clip(r, -1.0, 2.0)
 
         # Update frame stack
         self._frame_stack.pop(0)
