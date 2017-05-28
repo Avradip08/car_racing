@@ -14,12 +14,15 @@ from ac_worker import ACWorker
 import gym
 from world import World
 
+from evaluate import evaluate
+
 
 # Create a subsequent network
 worker_threads = []
 
 
 graph = tf.Graph()
+shared_network = None
 
 # Create a shared network
 with graph.as_default():
@@ -84,4 +87,7 @@ while True:
         t.join()
 
     print "Iteration Over"
+    avg_reward = evaluate(sess, shared_network)
+    print "Average Reward : {}".format(str(avg_reward))
+
     iteration += 1

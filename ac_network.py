@@ -93,6 +93,10 @@ class ActorCriticNetwork(object):
         sets the gradients_op
         """
         self.gradients = tf.gradients(self.loss, self.get_vars(), name=self._scope+"_gradients")
+
+        #for gradient in self.gradients:
+        #self.gradients = tf.clip_by_norm(self.gradients, 10.0)
+
         self.global_norm = tf.global_norm(self.gradients)
         # TODO : apply grad clip
 
