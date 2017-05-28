@@ -42,7 +42,7 @@ class ACWorker(object):
         # Sync this network with the shared network
         self.network.copy_params_from_shared_network(sess)
 
-        print "Thread {} coppied parameters from the shared network".format(self.worker_num)
+        #print "Thread {} coppied parameters from the shared network".format(self.worker_num)
 
         for t in range(T):
             policy, v = self.network.get_policy_and_value(sess, self.world.get_state())
@@ -58,6 +58,8 @@ class ACWorker(object):
 
             if self.world.is_terminal():
                 # Record score and stuff here
+                #print "Reward: {} | NumTiles: {}".format(self.world.rewards, self.world.num_tiles)
+                self.world.print_stats()
                 self.world.reset()
                 break
 
@@ -86,8 +88,8 @@ class ACWorker(object):
         loss, grads, global_norm = self.network.get_gradients_and_loss(sess, feed_dict)
 
         # print only for the first thread
-        if self.worker_num == 0:
-            print "loss {} | global_norm {} |".format(loss, global_norm)
+        #if self.worker_num == 0:
+            #print "loss {} | global_norm {} |".format(loss, global_norm)
 
         feed_dict = {}
         for p in self.shared_network.grads_placeholders:

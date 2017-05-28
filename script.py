@@ -51,6 +51,7 @@ def run_single_thread(worker_num, sess, env):
 
     worker.env = env
     worker.world = World("f",worker.env)
+    print(id(worker.world))
     worker.world.reset()
 
     while True:
@@ -66,8 +67,8 @@ def run_threads(worker_threads, sess, iteration):
 
     # Allocate Thread resources per worker
     for i in range(A3CConfig.NUM_THREADS):
-        print "generate environgment for thread {}".format(str(i))
         env = gym.make("CarRacing-v0")
+        print "generate environgment for thread {}, id {}".format(str(i), str(id(env)))
         threads.append(threading.Thread(target=run_single_thread, args=(i, sess, env)))
 
     # Fire all threads

@@ -43,6 +43,7 @@ class World(object):
         self.num_tiles = 0
         self.rewards = 0.0
         self.render = render
+        self.num_moves = 0
 
     def _process_frame(self, frame):
         """
@@ -80,6 +81,7 @@ class World(object):
         self.env.render()
         self.terminal = False
         self.num_tiles = 0
+        self.num_moves = 0
         self.rewards = 0.0
         self._frame_stack = [self._process_frame(self._env_state)] * \
                         (WorldConfig.NUM_FRAMES_IN_STATE + 1)
@@ -94,8 +96,7 @@ class World(object):
         action = np.multiply(self.actions[action_num], certainty)
 
         # Take step in the world
-        for i in range(30):
-            self._env_state, r, self.terminal, _ = self.env.step(action)
+        self._env_state, r, self.terminal, _ = self.env.step(action)
 
         # Update frame stack
         self._frame_stack.pop(0)
@@ -105,6 +106,7 @@ class World(object):
         self.rewards += r
         self.last_reward = r
         self.last_action = action_num
+        self.num_moves += 1
 
         # If we moved forward, increment num_tiles
         if r >= 0.0: self.num_tiles += 1
@@ -117,7 +119,7 @@ class World(object):
         return [self.get_prev_state(), self.last_action, self.last_reward, self.get_state()]
 
     def print_stats(self):
-        print "Rewards:"+str(self.rewards)+"| Num Tiles: "+str(self.num_tiles)
+        print "Rewards:"+str(self.rewards)+"| Num Tiles: "+str(self.num_tiles)+" | Num Moves: "+str(self.num_moves)
 
 if __name__ == "__main__":
     """
