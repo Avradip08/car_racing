@@ -25,7 +25,9 @@ graph = tf.Graph()
 with graph.as_default():
     shared_network= ACN("shared")
     shared_network.set_gradients_op()
+    shared_network.add_summaries()
 
+    # Create worker networks
     for i in range(A3CConfig.NUM_THREADS):
         thread = ACWorker(i, shared_network, "/cpu:0")
         worker_threads.append(thread)
@@ -33,13 +35,17 @@ with graph.as_default():
     var_init = tf.global_variables_initializer()
 
 sess = tf.Session(graph=graph)
-sess.run(var_init)
 
 filewriter = tf.summary.FileWriter("./results", sess.graph)
+
+sess.run(var_init)
+
+
 
 def run_single_thread(worker_num, sess, env):
     num_iteration = 0
     worker = worker_threads[worker_num]
+
     worker.env = env
     worker.world = World("f",worker.env)
     worker.world.reset()
@@ -47,27 +53,35 @@ def run_single_thread(worker_num, sess, env):
     while True:
         if num_iteration >= ACWorkerConfig.MAX_ITERATIONS: break
         worker.run(sess)
-        print "thread loop"
         num_iteration += 1
 
-def run_threads(worker_threads, sess):
+    # Delete worlds
+    worker.world = None
+
+def run_threads(worker_threads, sess, iteration):
     threads = []
 
     # Allocate Thread resources per worker
     for i in range(A3CConfig.NUM_THREADS):
-        print "Creating processing thread of " + str(i)
+        print "generate environgment for thread {}".format(str(i))
         env = gym.make("CarRacing-v0")
         threads.append(threading.Thread(target=run_single_thread, args=(i, sess, env)))
-        #threads.append(Process(target=run_single_thread, args=(i, sess, env)))
 
     # Fire all threads
     for t in threads:
         t.start()
+
     return threads
 
-# Run threads
-processing_threads = run_threads(worker_threads, sess)
+iteration = 0
+while True:
+    if iteration >= 5: break
+    print "Iteration Start"
+    processing_threads = run_threads(worker_threads, sess, iteration)
 
-# Finish
-for t in processing_threads:
-    t.join()
+    # Finish
+    for t in processing_threads:
+        t.join()
+
+    print "Iteration Over"
+    iteration += 1

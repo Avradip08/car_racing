@@ -59,39 +59,47 @@ class ActorCriticNetwork(object):
 
                 # Store all variables
                 self.var_list = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=self._scope)
-
                 # Attach Loss and Optimizers
                 log_policy = tf.log(tf.clip_by_value(self.policy, 1e-20, 1.0))
                 entropy = -tf.reduce_sum(self.policy * log_policy, axis=1)
 
-                p_loss = -tf.reduce_sum(tf.reduce_sum(tf.multiply(log_policy, self.a), axis=1) * self.td + entropy * 0.01)
-                v_loss = 0.5 * tf.nn.l2_loss(self.r - self.v)
+                self.p_loss = -tf.reduce_sum(tf.reduce_sum(tf.multiply(log_policy, self.a), axis=1) * self.td + entropy * 0.01)
+                self.v_loss = 0.5 * tf.nn.l2_loss(self.r - self.v)
 
                 # Combine policy and value networks for optimization
-                self.loss = p_loss + v_loss
-
-                # Gradient w.r.t to the loss.
-                #self.gradients = tf.gradients(self.loss, self.get_vars())
+                self.loss = self.p_loss + self.v_loss
 
                 # Only the shared network has an optimizer
-                # TODO : grad clip...
                 if self._scope == "shared":
+                    self.global_step = tf.Variable(0, trainable=False)
+                    self.lr = tf.train.exponential_decay(ACNetworkConfig.LR_START, self.global_step, 100000, 0.99, staircase=True)
+
                     self.grads_placeholders = [tf.placeholder(tf.float32, shape=var.get_shape()) for var in self.get_vars()]
-                    self.optimizer = tf.train.AdamOptimizer(ACNetworkConfig.LR, use_locking=True)
+                    self.optimizer = tf.train.AdamOptimizer(self.lr, use_locking=True)
                     self.apply_grads = self.optimizer.apply_gradients(zip(self.grads_placeholders, self.get_vars()))
+
+
+    def add_summaries(self):
+        # Add tensorboard stuff only for the shared network
+        with tf.name_scope("summaries"):
+            tf.summary.scalar('policy_loss', self.p_loss)
+            tf.summary.scalar('value_loss', self.v_loss)
+            tf.summary.scalar('total_loss', self.loss)
+            tf.summary.scalar('learning_rate', self.lr)
+            self.merged = tf.summary.merge_all()
 
     def set_gradients_op(self):
         """
         sets the gradients_op
         """
         self.gradients = tf.gradients(self.loss, self.get_vars(), name=self._scope+"_gradients")
+        self.global_norm = tf.global_norm(self.gradients)
+        # TODO : apply grad clip
 
     def get_gradients_and_loss(self, sess, feed_dict):
-        return sess.run([self.loss, self.gradients], feed_dict=feed_dict)
+        return sess.run([self.loss, self.gradients, self.global_norm], feed_dict=feed_dict)
 
     def apply_gradients(self, sess, feed_dict):
-        # TODO : give global step
-
         return sess.run(self.apply_grads, feed_dict)
 
     def set_copy_params_op(self, shared_network):

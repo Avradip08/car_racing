@@ -48,12 +48,9 @@ class ACWorker(object):
             policy, v = self.network.get_policy_and_value(sess, self.world.get_state())
             action = self.choose_action(policy)
 
-            print "Thread {} taking action {} with certainty {}".format(self.worker_num, str(action), str(np.amax(policy)))
-            sys.stdout.flush()
+            #print "Thread {} taking action {} with certainty {}".format(self.worker_num, str(action), str(np.amax(policy)))
 
             self.world.step(action, certainty = 1.0)
-
-            print "Made transition"
 
             curr_transition = self.world.get_last_transition()
             curr_transition.append(v)
@@ -86,7 +83,11 @@ class ACWorker(object):
 
         feed_dict = {self.network.s: batch_s, self.network.a: batch_a, \
             self.network.td: batch_td, self.network.r: batch_r}
-        loss, grads = self.network.get_gradients_and_loss(sess, feed_dict)
+        loss, grads, global_norm = self.network.get_gradients_and_loss(sess, feed_dict)
+
+        # print only for the first thread
+        if self.worker_num == 0:
+            print "loss {} | global_norm {} |".format(loss, global_norm)
 
         feed_dict = {}
         for p in self.shared_network.grads_placeholders:

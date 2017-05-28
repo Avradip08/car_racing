@@ -21,14 +21,14 @@ class WorldConfig():
 
 
 class A3CConfig():
-    NUM_THREADS = 8
+    NUM_THREADS = 2
 
 class ACNetworkConfig():
-    LR = 0.0001
+    LR_START = 0.0001
 
     FEATURE_DIM = 256
 
 class ACWorkerConfig():
     T = 5
     GAMMA = 0.99
-    MAX_ITERATIONS = 5
+    MAX_ITERATIONS = 10
