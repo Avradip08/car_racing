@@ -100,6 +100,8 @@ class World(object):
 
         # Take step in the world
         self._env_state, r, self.terminal, _ = self.env.step(action)
+        if self.terminal:
+            print "DEBUG>> Terminal Reward: " + str(r)
 
         # Clip the reward
         r = np.clip(r, -1.0, 1.0)
