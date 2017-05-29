@@ -1,6 +1,6 @@
 import numpy as np
 import tensorflow as tf
-from config import ACNetworkConfig, WorldConfig, A3CConfig
+from config import ACNetworkConfig, WorldConfig, A3CConfig, ACWorkerConfig
 
 
 class ActorCriticNetwork(object):
