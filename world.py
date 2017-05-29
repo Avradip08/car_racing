@@ -45,6 +45,8 @@ class World(object):
         self.rewards = 0.0
         self.render = render
         self.num_moves = 0
+        self.max_reward = 0.0
+
 
     def _process_frame(self, frame):
         """
@@ -84,6 +86,7 @@ class World(object):
         self.num_tiles = 0
         self.num_moves = 0
         self.rewards = 0.0
+        self.max_reward = 0.0
         self._frame_stack = [self._process_frame(self._env_state)] * \
                         (WorldConfig.NUM_FRAMES_IN_STATE + 1)
         _LOCK.release()
@@ -113,6 +116,11 @@ class World(object):
 
         # If we moved forward, increment num_tiles
         if r >= 0.0: self.num_tiles += 1
+
+        if self.rewards > self.max_reward:
+            self.max_reward = self.rewards
+        if self.max_reward - self.rewards >= 5.0:
+            self.terminal = True
 
         #if self.render: self.env.render()
         #self.env._render()

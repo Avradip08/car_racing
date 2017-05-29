@@ -69,7 +69,7 @@ def run_threads(worker_threads, sess, iteration):
     # Allocate Thread resources per worker
     for i in range(A3CConfig.NUM_THREADS):
         env = gym.make("CarRacing-v0")
-        print "generate environgment for thread {}, id {}".format(str(i), str(id(env)))
+        #print "generate environgment for thread {}, id {}".format(str(i), str(id(env)))
         threads.append(threading.Thread(target=run_single_thread, args=(i, sess, env)))
 
     # Fire all threads
@@ -80,7 +80,7 @@ def run_threads(worker_threads, sess, iteration):
 
 iteration = 0
 while True:
-    if iteration >= 5: break
+    if iteration >= 10: break
     processing_threads = run_threads(worker_threads, sess, iteration)
 
     # Finish
