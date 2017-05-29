@@ -25,6 +25,8 @@ class ACWorker(object):
 
         # Prepare for copying network parameters
         self.network.set_copy_params_op(self.shared_network)
+        self.max_ep_reward = 0.0
+        self.cur_ep_reward = 0.0
 
     def choose_action(self, policy):
         """
@@ -54,6 +56,12 @@ class ACWorker(object):
 
             self.world.step(action, certainty = 1.0)
 
+            self.cur_ep_reward = self.world.rewards
+            if self.cur_ep_reward > self.max_ep_reward:
+                self.max_ep_reward = self.cur_ep_reward
+            if self.max_ep_reward - self.cur_ep_reward > 5:
+                self.world.set_terminal()
+
             curr_transition = self.world.get_last_transition()
             curr_transition.append(v)
             transitions.append(curr_transition)
@@ -64,6 +72,8 @@ class ACWorker(object):
                 #if self.worker_num == 0 :
                 self.world.print_stats()
                 self.world.reset()
+                self.max_ep_reward = 0.0
+                self.cur_ep_reward = 0.0
                 break
 
         R = self.network.get_value(sess, self.world.get_state())

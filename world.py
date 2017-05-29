@@ -66,6 +66,9 @@ class World(object):
         """
         return np.stack(self._frame_stack[:-1], axis=2)
 
+    def set_terminal(self):
+        self.terminal = True
+
     def is_terminal(self):
         return self.terminal
 
@@ -99,7 +102,7 @@ class World(object):
         self._env_state, r, self.terminal, _ = self.env.step(action)
 
         # Clip the reward
-        r = np.clip(r, -1.0, 2.0)
+        r = np.clip(r, -1.0, 1.0)
 
         # Update frame stack
         self._frame_stack.pop(0)
