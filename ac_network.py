@@ -1,6 +1,6 @@
 import numpy as np
 import tensorflow as tf
-from config import ACNetworkConfig, WorldConfig, A3CConfig
+from config import ACNetworkConfig, WorldConfig, A3CConfig, ACWorkerConfig
 
 
 class ActorCriticNetwork(object):
@@ -13,12 +13,10 @@ class ActorCriticNetwork(object):
         self._build_graph()
 
     def _get_initializer(self, layer_type):
-        #if layer_type == "conv":
-        #    return tf.contrib.layers.xavier_initializer_conv2d()
-        #elif layer_type == "fc":
-        #    return tf.
-
-        return tf.contrib.layers.xavier_initializer()
+        if layer_type == "conv":
+            return tf.contrib.layers.xavier_initializer_conv2d()
+        elif layer_type == "fc":
+            return tf.contrib.layers.xavier_initializer()
 
     def _build_graph(self):
         """
@@ -80,8 +78,8 @@ class ActorCriticNetwork(object):
                 # Only the shared network has an optimizer
                 if self._scope == "shared":
                     self.global_step = tf.Variable(0, trainable=False)
-                    self.lr = tf.train.exponential_decay(ACNetworkConfig.LR_START, self.global_step, 10, 0.99, staircase=True)
-
+                    #self.lr = tf.train.exponential_decay(ACNetworkConfig.LR_START, self.global_step, 10, 0.99, staircase=True)
+                    self.lr = tf.train.polynomial_decay(ACNetworkConfig.LR_START, self.global_step, ACWorkerConfig.MAX_ITERATIONS, 0.0, 1.0)
                     self.grads_placeholders = [tf.placeholder(tf.float32, shape=var.get_shape()) for var in self.get_vars()]
                     self.optimizer = tf.train.AdamOptimizer(self.lr, use_locking=True)
                     self.apply_grads = self.optimizer.apply_gradients(zip(self.grads_placeholders, self.get_vars()), global_step=self.global_step)
@@ -92,17 +90,16 @@ class ActorCriticNetwork(object):
         # Add tensorboard stuff only for the shared network
         #with tf.name_scope(self._scope):
             #tf.summary.scalar('learning_rate', self.lr)
-        print "xx"
+        pass
 
     def set_gradients_op(self):
         """
         sets the gradients_op
         """
         grads = tf.gradients(self.loss, self.get_vars(), name=self._scope+"_gradients")
-        self.gradients = [tf.clip_by_norm(grad, 10.0, name=self._scope) for grad in grads]
+        self.gradients = [tf.clip_by_norm(grad, 40.0, name=self._scope) for grad in grads]
 
         self.global_norm = tf.global_norm(self.gradients)
-        # TODO : apply grad clip
 
     def get_gradients_and_loss(self, sess, feed_dict):
         return sess.run([self.loss, self.gradients, self.global_norm, self.merged], feed_dict=feed_dict)

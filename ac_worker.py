@@ -97,8 +97,8 @@ class ACWorker(object):
         # Attach summary only for thread 0
         if self.worker_num == 0:
             self.filewriter.add_summary(summary, iteration)
-            print sess.run(self.shared_network.global_step)
-            print sess.run(self.shared_network.lr)
+            #print sess.run(self.shared_network.global_step)
+            #print sess.run(self.shared_network.lr)
 
         # Apply gradients to the shared network
         feed_dict = {}
