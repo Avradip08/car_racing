@@ -24,22 +24,22 @@ worker_threads = []
 graph = tf.Graph()
 shared_network = None
 
+sess = tf.Session(graph=graph)
+
+filewriter = tf.summary.FileWriter("./results", sess.graph)
+
 # Create a shared network
 with graph.as_default():
     shared_network= ACN("shared")
     shared_network.set_gradients_op()
-    shared_network.add_summaries()
+    #shared_network.add_summaries()
 
     # Create worker networks
     for i in range(A3CConfig.NUM_THREADS):
-        thread = ACWorker(i, shared_network, "/cpu:0")
+        thread = ACWorker(i, shared_network, "/cpu:0", filewriter)
         worker_threads.append(thread)
 
     var_init = tf.global_variables_initializer()
-
-sess = tf.Session(graph=graph)
-
-filewriter = tf.summary.FileWriter("./results", sess.graph)
 
 saver = tf.train.Saver(shared_network.all_vars)
 
@@ -53,12 +53,11 @@ def run_single_thread(worker_num, sess, env):
 
     worker.env = env
     worker.world = World("f",worker.env)
-    print(id(worker.world))
     worker.world.reset()
 
     while True:
         if num_iteration >= ACWorkerConfig.MAX_ITERATIONS: break
-        worker.run(sess)
+        worker.run(sess, num_iteration)
         num_iteration += 1
 
     # Delete worlds

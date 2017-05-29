@@ -33,10 +33,10 @@ class ActorCriticNetwork(object):
         with tf.device(self._device):
             with tf.variable_scope(self._scope):
                 # Define Graph entry points
-                self.s = tf.placeholder(tf.float32, [None, H, W, C])
-                self.a = tf.placeholder(tf.float32, [None, nA])
-                self.td = tf.placeholder(tf.float32, [None]) # (R - V)
-                self.r = tf.placeholder(tf.float32, [None])
+                self.s = tf.placeholder(tf.float32, shape=[None, H, W, C], name="State")
+                self.a = tf.placeholder(tf.float32, shape=[None, nA], name="Action")
+                self.td = tf.placeholder(tf.float32, shape=[None], name="Temporal_Diff") # (R - V)
+                self.r = tf.placeholder(tf.float32, shape=[None], name="R")
 
                 # Start Drawing Graph
                 # Build CNN Feature Extraction Graph
@@ -69,10 +69,18 @@ class ActorCriticNetwork(object):
                 # Combine policy and value networks for optimization
                 self.loss = self.p_loss + self.v_loss
 
+
+                p_loss_sum = tf.summary.scalar('policy_loss', self.p_loss)
+                v_loss_sum = tf.summary.scalar('value_loss', self.v_loss)
+                loss_sum = tf.summary.scalar('total_loss', self.loss)
+
+                self.merged = tf.summary.merge([p_loss_sum, v_loss_sum, loss_sum])
+
+
                 # Only the shared network has an optimizer
                 if self._scope == "shared":
                     self.global_step = tf.Variable(0, trainable=False)
-                    self.lr = tf.train.exponential_decay(ACNetworkConfig.LR_START, self.global_step, 10000, 0.99, staircase=True)
+                    self.lr = tf.train.exponential_decay(ACNetworkConfig.LR_START, self.global_step, 10, 0.99, staircase=True)
 
                     self.grads_placeholders = [tf.placeholder(tf.float32, shape=var.get_shape()) for var in self.get_vars()]
                     self.optimizer = tf.train.AdamOptimizer(self.lr, use_locking=True)
@@ -82,12 +90,9 @@ class ActorCriticNetwork(object):
 
     def add_summaries(self):
         # Add tensorboard stuff only for the shared network
-        with tf.name_scope(self._scope):
-            tf.summary.scalar('policy_loss', self.p_loss)
-            tf.summary.scalar('value_loss', self.v_loss)
-            tf.summary.scalar('total_loss', self.loss)
+        #with tf.name_scope(self._scope):
             #tf.summary.scalar('learning_rate', self.lr)
-            self.merged = tf.summary.merge_all()
+        print "xx"
 
     def set_gradients_op(self):
         """
@@ -100,7 +105,7 @@ class ActorCriticNetwork(object):
         # TODO : apply grad clip
 
     def get_gradients_and_loss(self, sess, feed_dict):
-        return sess.run([self.loss, self.gradients, self.global_norm], feed_dict=feed_dict)
+        return sess.run([self.loss, self.gradients, self.global_norm, self.merged], feed_dict=feed_dict)
 
     def apply_gradients(self, sess, feed_dict):
         return sess.run(self.apply_grads, feed_dict)

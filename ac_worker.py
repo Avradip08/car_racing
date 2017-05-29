@@ -9,7 +9,7 @@ class ACWorker(object):
     """
     Each worker owns its own world(env)
     """
-    def __init__(self, worker_num, shared_network, device):
+    def __init__(self, worker_num, shared_network, device, filewriter):
         # Create world and reset all states
         #self.world = World("CarRacing-v0", render=False)
 
@@ -21,10 +21,12 @@ class ACWorker(object):
         # Prepare for gradient calc
         self.network.set_gradients_op()
 
-        #self.network.add_summaries()
-
         # Prepare for copying network parameters
         self.network.set_copy_params_op(self.shared_network)
+
+        #if worker_num == 0:
+        self.network.add_summaries()
+        self.filewriter = filewriter
 
     def choose_action(self, policy):
         """
@@ -33,7 +35,7 @@ class ACWorker(object):
         return np.random.choice(range(len(policy)), p = policy)
 
     #TODO: def run(self, sess, ep, score_input): ?
-    def run(self, sess):
+    def run(self, sess, iteration):
         """
         Threading Operation of this worker
         """
@@ -86,20 +88,22 @@ class ACWorker(object):
             batch_r.append(R)
             batch_td.append(td)
 
-        feed_dict = {self.network.s: batch_s, self.network.a: batch_a, \
+        # Calculate the gradientsm loss and the global norm
+        feed_dict = {self.network.s: np.stack(batch_s), self.network.a: batch_a, \
             self.network.td: batch_td, self.network.r: batch_r}
-        loss, grads, global_norm = self.network.get_gradients_and_loss(sess, feed_dict)
+        loss, grads, global_norm, summary = self.network.get_gradients_and_loss(sess, feed_dict)
 
-        # print only for the first thread
-        #if self.worker_num == 0:
-            #print "loss {} | global_norm {} |".format(loss, global_norm)
 
+        # Attach summary only for thread 0
+        if self.worker_num == 0:
+            self.filewriter.add_summary(summary, iteration)
+            print sess.run(self.shared_network.global_step)
+            print sess.run(self.shared_network.lr)
+
+        # Apply gradients to the shared network
         feed_dict = {}
         for p in self.shared_network.grads_placeholders:
             feed_dict[p] = find_grad(p, grads)
-
-        # Multiprocessing : Instead of updating from the thread, shoot resources up
-
         self.shared_network.apply_gradients(sess, feed_dict)
 
 def find_grad(p, grad_list):

@@ -7,7 +7,7 @@ def choose_action(policy):
     return np.random.choice(range(len(policy)), p = policy)
 
 def evaluate_single_episode(sess, network, world):
-    world.reset()
+    #world.reset()
 
     while not world.is_terminal():
         policy, v = network.get_policy_and_value(sess, world.get_state())
@@ -21,6 +21,7 @@ def evaluate_single_episode(sess, network, world):
 def evaluate(sess, network):
     test_env = gym.make("CarRacing-v0")
     test_world = World("f", test_env)
+    test_world.reset()
     L = 1
 
     total_rewards = 0.0
@@ -29,6 +30,7 @@ def evaluate(sess, network):
 
     for i in range(L):
         total_rewards += evaluate_single_episode(sess, network, test_world)
+        test_world.reset()
 
     avg_reward = total_rewards / float(L)
 
