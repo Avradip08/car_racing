@@ -55,6 +55,7 @@ class ACWorker(object):
             #print "Thread {} taking action {} with certainty {}".format(self.worker_num, str(action), str(np.amax(policy)))
 
             self.world.step(action, certainty = 1.0)
+            self.shared_network.global_step += 1
 
             self.cur_ep_reward = self.world.rewards
             if self.cur_ep_reward > self.max_ep_reward:
