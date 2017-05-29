@@ -24,7 +24,7 @@ class A3CConfig():
     NUM_THREADS = 8
 
 class ACNetworkConfig():
-    LR_START = 0.0001
+    LR_START = 0.01
 
     FEATURE_DIM = 256
 
@@ -33,4 +33,4 @@ class ACNetworkConfig():
 class ACWorkerConfig():
     T = 5
     GAMMA = 0.99
-    MAX_ITERATIONS = 4000000
+    MAX_ITERATIONS = 1000000
