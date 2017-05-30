@@ -64,7 +64,10 @@ class ACWorker(object):
             if self.world.is_terminal():
                 if self.world.max_real_rewards >= self.guiness:
                     self.guiness = self.world.max_real_rewards
-                    self.saver.save(sess, "./checkpoint/"+str(int(self.guiness)))
+                    self.saver.save(sess, "./checkpoint/"+str(int(self.guiness))+"_iter"+str(iteration))
+
+                if self.world.num_tiles >= 150:
+                    self.saver.save(sess, "./checkpoint/"+str(int(self.world.max_real_rewards))+"_iter"+str(iteration))
 
                 self.world.print_stats()
                 self.world.reset()

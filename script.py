@@ -72,6 +72,7 @@ def run_threads(worker_threads, sess, iteration):
     # Allocate Thread resources per worker
     for i in range(A3CConfig.NUM_THREADS):
         env = gym.make("CarRacing-v0")
+        env._max_episode_steps = 3000
         #print "generate environgment for thread {}, id {}".format(str(i), str(id(env)))
         threads.append(threading.Thread(target=run_single_thread, args=(i, sess, env)))
 
