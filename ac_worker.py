@@ -9,7 +9,7 @@ class ACWorker(object):
     """
     Each worker owns its own world(env)
     """
-    def __init__(self, worker_num, shared_network, device, filewriter):
+    def __init__(self, worker_num, shared_network, device, filewriter, saver):
         # Create world and reset all states
         #self.world = World("CarRacing-v0", render=False)
 
@@ -27,6 +27,8 @@ class ACWorker(object):
         #if worker_num == 0:
         self.network.add_summaries()
         self.filewriter = filewriter
+        self.saver = saver
+        self.guiness = 0.0
 
     def choose_action(self, policy):
         """
@@ -59,6 +61,11 @@ class ACWorker(object):
             transitions.append(curr_transition)
 
             if self.world.is_terminal():
+                if self.guiness < self.world.max_real_rewards:
+                    print "GUINESS WORLD RECORD"
+                    self.guiness = self.world.max_real_rewards
+                    self.saver.save(sess, "./checkpoint/"+str(int(self.guiness)))
+
                 self.world.print_stats()
                 self.world.reset()
                 break

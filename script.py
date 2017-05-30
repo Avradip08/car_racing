@@ -23,6 +23,7 @@ worker_threads = []
 
 graph = tf.Graph()
 shared_network = None
+saver = None
 
 sess = tf.Session(graph=graph)
 
@@ -34,14 +35,15 @@ with graph.as_default():
     shared_network.set_gradients_op()
     #shared_network.add_summaries()
 
+    saver = tf.train.Saver(shared_network.all_vars)
+
     # Create worker networks
     for i in range(A3CConfig.NUM_THREADS):
-        thread = ACWorker(i, shared_network, "/cpu:0", filewriter)
+        thread = ACWorker(i, shared_network, "/cpu:0", filewriter, saver)
         worker_threads.append(thread)
 
     var_init = tf.global_variables_initializer()
 
-saver = tf.train.Saver(shared_network.all_vars)
 
 sess.run(var_init)
 
