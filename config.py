@@ -21,7 +21,7 @@ class WorldConfig():
 
 
 class A3CConfig():
-    NUM_THREADS = 8
+    NUM_THREADS = 2
 
 class ACNetworkConfig():
     LR_START = 0.001

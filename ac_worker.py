@@ -52,8 +52,6 @@ class ACWorker(object):
             policy, v = self.network.get_policy_and_value(sess, self.world.get_state())
             action = self.choose_action(policy)
 
-            #print "Thread {} taking action {} with certainty {}".format(self.worker_num, str(action), str(np.amax(policy)))
-
             self.world.step(action, certainty = 1.0)
 
             curr_transition = self.world.get_last_transition()
@@ -61,9 +59,6 @@ class ACWorker(object):
             transitions.append(curr_transition)
 
             if self.world.is_terminal():
-                # Record score and stuff here
-                #print "Reward: {} | NumTiles: {}".format(self.world.rewards, self.world.num_tiles)
-                #if self.worker_num == 0 :
                 self.world.print_stats()
                 self.world.reset()
                 break
@@ -90,15 +85,13 @@ class ACWorker(object):
 
         # Calculate the gradientsm loss and the global norm
         feed_dict = {self.network.s: np.stack(batch_s), self.network.a: batch_a, \
-            self.network.td: batch_td, self.network.r: batch_r}
+            self.network.td: batch_td, self.network.r: batch_r, self.network.ep_score:self.world.real_rewards}
         loss, grads, global_norm, summary = self.network.get_gradients_and_loss(sess, feed_dict)
 
 
         # Attach summary only for thread 0
         if self.worker_num == 0:
             self.filewriter.add_summary(summary, iteration)
-            #print sess.run(self.shared_network.global_step)
-            #print sess.run(self.shared_network.lr)
 
         # Apply gradients to the shared network
         feed_dict = {}

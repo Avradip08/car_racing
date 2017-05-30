@@ -85,7 +85,9 @@ class World(object):
         self.terminal = False
         self.num_tiles = 0
         self.num_moves = 0
+        self.real_rewards = 0.0
         self.rewards = 0.0
+        self.max_real_rewards = 0.0
         self.max_reward = 0.0
         self._frame_stack = [self._process_frame(self._env_state)] * \
                         (WorldConfig.NUM_FRAMES_IN_STATE + 1)
@@ -106,6 +108,14 @@ class World(object):
         self._frame_stack.pop(0)
         self._frame_stack.append(self._process_frame(self._env_state))
 
+
+        self.real_rewards += r
+        if self.real_rewards > self.max_real_rewards:
+            self.max_real_rewards = self.real_rewards
+        if self.max_real_rewards - self.real_rewards >= 5.0:
+            self.terminal = True
+
+
         r = np.clip(r, -1.0, 1.0)
 
         # Update cumulative reward R
@@ -117,10 +127,10 @@ class World(object):
         # If we moved forward, increment num_tiles
         if r >= 0.0: self.num_tiles += 1
 
-        if self.rewards > self.max_reward:
-            self.max_reward = self.rewards
-        if self.max_reward - self.rewards >= 5.0:
-            self.terminal = True
+        #if self.rewards > self.max_reward:
+        #    self.max_reward = self.rewards
+        #if self.max_reward - self.rewards >= 5.0:
+        #    self.terminal = True
 
         #if self.render: self.env.render()
         #self.env._render()
@@ -130,7 +140,7 @@ class World(object):
         return [self.get_prev_state(), self.last_action, self.last_reward, self.get_state()]
 
     def print_stats(self):
-        print "Rewards:"+str(self.rewards)+"| Num Tiles: "+str(self.num_tiles)+" | Num Moves: "+str(self.num_moves)
+        print "Rewards:"+str(self.real_rewards)+"| Max_Reward"+str(self.max_real_rewards)+"| Num Tiles: "+str(self.num_tiles)+" | Num Moves: "+str(self.num_moves)
 
 if __name__ == "__main__":
     """
