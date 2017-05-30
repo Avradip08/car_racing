@@ -53,7 +53,9 @@ class ActorCriticNetwork(object):
                 w_init = self._get_initializer('fc')
                 features = tf.contrib.layers.fully_connected(conv2_flatten, num_outputs=dH, weights_initializer=w_init)
 
-                pi_scores = tf.contrib.layers.fully_connected(features, num_outputs=nA, activation_fn=None, weights_initializer=w_init)
+                pi_layer = tf.contrib.layers.fully_connected(features, num_outputs=256, weights_initializer=w_init)
+
+                pi_scores = tf.contrib.layers.fully_connected(pi_layer, num_outputs=nA, activation_fn=None, weights_initializer=w_init)
                 v = tf.contrib.layers.fully_connected(features, num_outputs=1, activation_fn=None, weights_initializer=w_init)
 
                 self.policy = tf.nn.softmax(pi_scores)
@@ -85,7 +87,7 @@ class ActorCriticNetwork(object):
                 if self._scope == "shared":
                     self.global_step = tf.Variable(0, trainable=False)
                     #self.lr = tf.train.exponential_decay(ACNetworkConfig.LR_START, self.global_step, 10, 0.99, staircase=True)
-                    self.lr = tf.train.polynomial_decay(ACNetworkConfig.LR_START, self.global_step, ACWorkerConfig.MAX_ITERATIONS * 10 * 8, 0.000001, 1.0)
+                    self.lr = tf.train.polynomial_decay(ACNetworkConfig.LR_START, self.global_step, ACWorkerConfig.MAX_ITERATIONS * 10 * 8, 0.00001, 1.0)
                     self.grads_placeholders = [tf.placeholder(tf.float32, shape=var.get_shape()) for var in self.get_vars()]
                     self.optimizer = tf.train.AdamOptimizer(self.lr, use_locking=True)
                     self.apply_grads = self.optimizer.apply_gradients(zip(self.grads_placeholders, self.get_vars()), global_step=self.global_step)
