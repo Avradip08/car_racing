@@ -91,6 +91,11 @@ class ActorCriticNetwork(object):
                     self.apply_grads = self.optimizer.apply_gradients(zip(self.grads_placeholders, self.get_vars()), global_step=self.global_step)
                     self.all_vars = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=self._scope)
 
+                self.saver = tf.train.Saver(tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=self._scope))
+
+
+    def save(self, sess, name):
+        self.saver.save(sess, "./checkpoint/"+str(self._scope)+"_"+name)
 
     def add_summaries(self):
         # Add tensorboard stuff only for the shared network

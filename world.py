@@ -93,7 +93,7 @@ class World(object):
                         (WorldConfig.NUM_FRAMES_IN_STATE + 1)
         _LOCK.release()
 
-    def step(self, action_num, certainty=1.0):
+    def step(self, action_num, certainty=1.0, train=True):
         """
         action_num : GAS, BRAKE, LEFT, RIGHT in order 0123
         certainty : the softmax score of the chosen action.
@@ -109,11 +109,13 @@ class World(object):
         self._frame_stack.append(self._process_frame(self._env_state))
 
 
-        self.real_rewards += r
-        if self.real_rewards > self.max_real_rewards:
-            self.max_real_rewards = self.real_rewards
-        if self.max_real_rewards - self.real_rewards >= 5.0:
-            self.terminal = True
+        if train:
+
+            self.real_rewards += r
+            if self.real_rewards > self.max_real_rewards:
+                self.max_real_rewards = self.real_rewards
+            if self.max_real_rewards - self.real_rewards >= 5.0:
+                self.terminal = True
 
 
         r = np.clip(r, -1.0, 1.0)
@@ -140,7 +142,7 @@ class World(object):
         return [self.get_prev_state(), self.last_action, self.last_reward, self.get_state()]
 
     def print_stats(self):
-        print "Rewards:"+str(self.real_rewards)+"| Max_Reward"+str(self.max_real_rewards)+"| Num Tiles: "+str(self.num_tiles)+" | Num Moves: "+str(self.num_moves)
+        print "Rewards:"+str(self.real_rewards)+"| Max_Reward: "+str(self.max_real_rewards)+"| Num Tiles: "+str(self.num_tiles)+" | Num Moves: "+str(self.num_moves)
 
 if __name__ == "__main__":
     """

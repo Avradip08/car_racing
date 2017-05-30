@@ -36,7 +36,8 @@ with graph.as_default():
     shared_network.set_gradients_op()
     #shared_network.add_summaries()
 
-    saver = tf.train.Saver(shared_network.all_vars)
+    #saver = tf.train.Saver(shared_network.all_vars)
+    saver = None
 
     # Create worker networks
     for i in range(A3CConfig.NUM_THREADS):
@@ -91,7 +92,7 @@ while True:
     for t in processing_threads:
         t.join()
 
-    saver.save(sess, ACNetworkConfig.SAVE_PATH+str(iteration))
+    #saver.save(sess, ACNetworkConfig.SAVE_PATH+str(iteration))
 
     avg_reward = evaluate(sess, shared_network)
     print "Average Reward : {}".format(str(avg_reward))
