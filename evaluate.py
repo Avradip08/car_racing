@@ -4,6 +4,8 @@ from world import World
 import gym
 from ac_network import ActorCriticNetwork as ACN
 import sys
+from gym import wrappers
+
 
 def choose_action(policy):
     return np.random.choice(range(len(policy)), p = policy)
@@ -23,10 +25,12 @@ def evaluate_single_episode(sess, network, world):
 
 def evaluate(sess, network):
     test_env = gym.make("CarRacing-v0")
+    test_env = wrappers.Monitor(test_env, '/tmp/car_racing-1')
+
     test_world = World("f", test_env)
     test_world.reset()
     test_world.env.render()
-    L = 1
+    L = 100
 
     total_rewards = 0.0
 
