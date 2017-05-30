@@ -131,9 +131,11 @@ class ActorCriticNetwork(object):
                 self.copy_params = tf.group(*ops, name=name)
 
     def copy_params_from_shared_network(self, sess):
-        _COPY_LOCK.acquire()
+        #_COPY_LOCK.acquire()
+        _LOCK.acquire()
         sess.run(self.copy_params, feed_dict={})
-        _COPY_LOCK.release()
+        _LOCK.release()
+        #_COPY_LOCK.release()
 
     def set_vars(self, var_list):
         self.var_list = var_list
