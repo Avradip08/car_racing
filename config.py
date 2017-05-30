@@ -24,7 +24,7 @@ class A3CConfig():
     NUM_THREADS = 2
 
 class ACNetworkConfig():
-    LR_START = 0.001
+    LR_START = 0.0001
 
     FEATURE_DIM = 256
 
