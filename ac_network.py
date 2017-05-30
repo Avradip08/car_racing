@@ -2,6 +2,10 @@ import numpy as np
 import tensorflow as tf
 from config import ACNetworkConfig, WorldConfig, A3CConfig, ACWorkerConfig
 
+import threading
+
+_LOCK = threading.Lock()
+_COPY_LOCK = threading.Lock()
 
 class ActorCriticNetwork(object):
     """
@@ -107,7 +111,10 @@ class ActorCriticNetwork(object):
         return sess.run([self.loss, self.gradients, self.global_norm, self.merged], feed_dict=feed_dict)
 
     def apply_gradients(self, sess, feed_dict):
-        return sess.run(self.apply_grads, feed_dict)
+        _LOCK.acquire()
+        result = sess.run(self.apply_grads, feed_dict)
+        _LOCK.release()
+        return result
 
     def set_copy_params_op(self, shared_network):
         my_vars = self.get_vars()
@@ -124,7 +131,9 @@ class ActorCriticNetwork(object):
                 self.copy_params = tf.group(*ops, name=name)
 
     def copy_params_from_shared_network(self, sess):
+        _COPY_LOCK.acquire()
         sess.run(self.copy_params, feed_dict={})
+        _COPY_LOCK.release()
 
     def set_vars(self, var_list):
         self.var_list = var_list

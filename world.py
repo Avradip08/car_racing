@@ -20,8 +20,8 @@ def edge_detection(frame):
     return frame
 
 def zero_center(frame):
-    return np.divide(frame - 127, 127.0)
-    #return frame - 127
+    #return np.divide(frame - 127, 127.0)
+    return frame - 127.0
 
 class World(object):
     """
