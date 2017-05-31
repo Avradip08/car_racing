@@ -55,7 +55,7 @@ class ACWorker(object):
             policy, v = self.network.get_policy_and_value(sess, self.world.get_state())
             action = self.choose_action(policy)
 
-            self.world.step(action, certainty = 1.0)
+            self.world.step(action, certainty = policy[action])
 
             curr_transition = self.world.get_last_transition()
             curr_transition.append(v)

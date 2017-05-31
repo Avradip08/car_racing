@@ -7,9 +7,9 @@ class WorldConfig():
 
     # POSSIBLE ACTIONS
     GAS = [0.0, 1.0, 0.0]
-    BRAKE = [0.0, 0.0, 0.8]
-    LEFT = [-1.0, 0.0, 0.0]
-    RIGHT = [1.0, 0.0, 0.0]
+    BRAKE = [0.0, 0.0, 0.95]
+    LEFT = [-1.0, 0.0, 0.5]
+    RIGHT = [1.0, 0.0, 0.5]
 
     ACTIONS = [GAS, BRAKE, LEFT, RIGHT]
 
@@ -17,11 +17,11 @@ class WorldConfig():
 
     # Each state is 3rd dimensional stack of consecutive frames
     NUM_FRAMES_IN_STATE = 5
-    WORLD_SIZE = 84 #TODO: why 84?
+    WORLD_SIZE = 96 #TODO: why 84?
 
 
 class A3CConfig():
-    NUM_THREADS = 2
+    NUM_THREADS = 8
 
 class ACNetworkConfig():
     LR_START = 0.0001
@@ -33,4 +33,4 @@ class ACNetworkConfig():
 class ACWorkerConfig():
     T = 5
     GAMMA = 0.99
-    MAX_ITERATIONS = (10 ** 5)
+    MAX_ITERATIONS = 4 * (10 ** 6)

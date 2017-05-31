@@ -54,7 +54,7 @@ class World(object):
         """
         frame = rgb2gray(frame) # squash to 96 x 96
         frame = zero_center(frame)
-        frame = crop(frame)
+        #frame = crop(frame)
         return frame
 
     def get_state(self):
@@ -110,15 +110,13 @@ class World(object):
 
 
         if train:
-
             self.real_rewards += r
             if self.real_rewards > self.max_real_rewards:
                 self.max_real_rewards = self.real_rewards
             if self.max_real_rewards - self.real_rewards >= 5.0:
                 self.terminal = True
 
-
-        r = np.clip(r, -1.0, 1.0)
+        #r = np.clip(r, -1.0, 1.0)
 
         # Update cumulative reward R
         self.rewards += r

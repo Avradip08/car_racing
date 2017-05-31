@@ -53,10 +53,13 @@ class ActorCriticNetwork(object):
                 w_init = self._get_initializer('fc')
                 features = tf.contrib.layers.fully_connected(conv2_flatten, num_outputs=dH, weights_initializer=w_init)
 
-                pi_layer = tf.contrib.layers.fully_connected(features, num_outputs=256, weights_initializer=w_init)
+                pi_layer = tf.contrib.layers.fully_connected(features, num_outputs=dH, weights_initializer=w_init)
 
                 pi_scores = tf.contrib.layers.fully_connected(pi_layer, num_outputs=nA, activation_fn=None, weights_initializer=w_init)
-                v = tf.contrib.layers.fully_connected(features, num_outputs=1, activation_fn=None, weights_initializer=w_init)
+
+                v_layer = tf.contrib.layers.fully_connected(features, num_outputs=dH, weights_initializer=w_init)
+
+                v = tf.contrib.layers.fully_connected(v_layer, num_outputs=1, activation_fn=None, weights_initializer=w_init)
 
                 self.policy = tf.nn.softmax(pi_scores)
                 self.v = tf.reshape(v, [-1])
