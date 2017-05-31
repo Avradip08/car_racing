@@ -56,11 +56,12 @@ with graph.as_default():
 
 sess.run(var_init)
 
-def run_single_thread(worker_num, sess, env, rb):
+def run_single_thread(worker_num, env, rb):
     num_iteration = 0
     worker = worker_threads[worker_num]
 
     global replay_buffer
+    global sess
 
     if env is not None:
         worker.env = env
@@ -88,7 +89,7 @@ def run_threads(worker_threads, sess, iteration, rb):
         env = None
         if i < A3CConfig.NUM_PLAY_THREADS:
             env = gym.make("CarRacing-v0")
-        threads.append(threading.Thread(target=run_single_thread, args=(i, sess, env, rb)))
+        threads.append(threading.Thread(target=run_single_thread, args=(i, env, rb)))
 
     # Fire all threads
     for t in threads:
