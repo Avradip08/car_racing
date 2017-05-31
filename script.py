@@ -62,6 +62,9 @@ def run_single_thread(worker_num, env, rb):
 
     global replay_buffer
     global sess
+    global shared_network
+
+    worker.shared_network = shared_network
 
     if env is not None:
         worker.env = env

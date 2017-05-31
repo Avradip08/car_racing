@@ -34,6 +34,9 @@ class ACWorker(object):
         if worker_type == "replay":
             self.batch_size = ACWorkerConfig.BATCH_SIZE
 
+    #def set_copy_op(self, shared_network):
+    #    self.shared_network = shared_network
+
     def choose_action(self, policy):
         """
         policy : length nA list of action softmax scores
