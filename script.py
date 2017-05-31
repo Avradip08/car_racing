@@ -16,6 +16,8 @@ from world import World
 
 from evaluate import evaluate
 
+from replay_buffer import ReplayBuffer as RB
+from Queue import Queue
 
 # Create a subsequent network
 worker_threads = []
@@ -29,53 +31,64 @@ sess = tf.Session(graph=graph)
 
 filewriter = tf.summary.FileWriter("./results", sess.graph)
 
+replay_buffer = RB(ACWorkerConfig.BUFFER_SIZE)
 
 # Create a shared network
 with graph.as_default():
     shared_network= ACN("shared")
     shared_network.set_gradients_op()
-    #shared_network.add_summaries()
 
     #saver = tf.train.Saver(shared_network.all_vars)
     saver = None
 
     # Create worker networks
-    for i in range(A3CConfig.NUM_THREADS):
+    for i in range(A3CConfig.NUM_PLAY_THREADS):
         thread = ACWorker(i, shared_network, "/cpu:0", filewriter, saver)
         worker_threads.append(thread)
+
+    # Create replay threads
+    for j in range(A3CConfig.NUM_REPLAY_THREADS):
+        replay_thread = ACWorker(j + A3CConfig.NUM_PLAY_THREADS, shared_network, "/cpu:0", filewriter, saver, "replay")
+        worker_threads.append(replay_thread)
 
     var_init = tf.global_variables_initializer()
 
 
 sess.run(var_init)
 
-
-
-def run_single_thread(worker_num, sess, env):
+def run_single_thread(worker_num, sess, env, rb):
     num_iteration = 0
     worker = worker_threads[worker_num]
 
-    worker.env = env
-    worker.world = World("f",worker.env)
-    worker.world.reset()
+    global replay_buffer
+
+    if env is not None:
+        worker.env = env
+        worker.world = World("f",worker.env)
+        worker.world.reset()
 
     while True:
         if num_iteration >= ACWorkerConfig.MAX_ITERATIONS: break
-        worker.run(sess, num_iteration)
+
+        if worker.worker_type == "play":
+            worker.run(sess, num_iteration, replay_buffer)
+        else:
+            worker.replay(sess, num_iteration, replay_buffer)
+
         num_iteration += 1
 
     # Delete worlds
     worker.world = None
 
-def run_threads(worker_threads, sess, iteration):
+def run_threads(worker_threads, sess, iteration, rb):
     threads = []
 
     # Allocate Thread resources per worker
     for i in range(A3CConfig.NUM_THREADS):
-        env = gym.make("CarRacing-v0")
-        env._max_episode_steps = 3000
-        #print "generate environgment for thread {}, id {}".format(str(i), str(id(env)))
-        threads.append(threading.Thread(target=run_single_thread, args=(i, sess, env)))
+        env = None
+        if i < A3CConfig.NUM_PLAY_THREADS:
+            env = gym.make("CarRacing-v0")
+        threads.append(threading.Thread(target=run_single_thread, args=(i, sess, env, rb)))
 
     # Fire all threads
     for t in threads:
@@ -86,7 +99,7 @@ def run_threads(worker_threads, sess, iteration):
 iteration = 0
 while True:
     if iteration >= 10: break
-    processing_threads = run_threads(worker_threads, sess, iteration)
+    processing_threads = run_threads(worker_threads, sess, iteration, replay_buffer)
 
     # Finish
     for t in processing_threads:

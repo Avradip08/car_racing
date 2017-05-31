@@ -121,9 +121,9 @@ class ActorCriticNetwork(object):
         return sess.run([self.loss, self.gradients, self.global_norm, self.merged], feed_dict=feed_dict)
 
     def apply_gradients(self, sess, feed_dict):
-        _LOCK.acquire()
+        #_LOCK.acquire()
         result = sess.run(self.apply_grads, feed_dict)
-        _LOCK.release()
+        #_LOCK.release()
         return result
 
     def set_copy_params_op(self, shared_network):
@@ -142,9 +142,9 @@ class ActorCriticNetwork(object):
 
     def copy_params_from_shared_network(self, sess):
         #_COPY_LOCK.acquire()
-        _LOCK.acquire()
+        #_LOCK.acquire()
         sess.run(self.copy_params, feed_dict={})
-        _LOCK.release()
+        #_LOCK.release()
         #_COPY_LOCK.release()
 
     def set_vars(self, var_list):

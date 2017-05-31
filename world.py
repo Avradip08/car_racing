@@ -54,7 +54,7 @@ class World(object):
         """
         frame = rgb2gray(frame) # squash to 96 x 96
         frame = zero_center(frame)
-        #frame = crop(frame)
+        frame = crop(frame)
         return frame
 
     def get_state(self):
@@ -127,17 +127,10 @@ class World(object):
         # If we moved forward, increment num_tiles
         if r >= 0.0: self.num_tiles += 1
 
-        #if self.rewards > self.max_reward:
-        #    self.max_reward = self.rewards
-        #if self.max_reward - self.rewards >= 5.0:
-        #    self.terminal = True
-
-        #if self.render: self.env.render()
-        #self.env._render()
         _LOCK.release()
 
     def get_last_transition(self):
-        return [self.get_prev_state(), self.last_action, self.last_reward, self.get_state()]
+        return [self.get_prev_state(), self.last_action, self.last_reward, self.get_state(), self.terminal]
 
     def print_stats(self):
         print "Rewards:"+str(self.real_rewards)+"| Max_Reward: "+str(self.max_real_rewards)+"| Num Tiles: "+str(self.num_tiles)+" | Num Moves: "+str(self.num_moves)
